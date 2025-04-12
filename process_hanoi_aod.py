@@ -43,7 +43,7 @@ def crop_hanoi_aod(input_tif_path, hanoi_shapefile_path, output_tif_path):
 
 # ====== Chạy thử tại đây ======
 if __name__ == "__main__":
-    input_tif = r"C:\Users\Admin\himawari_project_v2\himawari_data_v2\202504\04\00\aod_vietnam_NC_H09_20250404_0020_L2ARP031_FLDK.02401_02401.tif"
+    input_tif = r"C:\Users\Admin\himawari_project_v2\himawari_data_v2\202504\04\00\aod_vietnam_NC_H09_20250404_0000_L2ARP031_FLDK.02401_02401.tif"
     hanoi_shapefile = r"C:\Users\Admin\himawari_project_v2\hanoi\hanoi_shapefile.shp"
     output_tif = input_tif.replace("aod_vietnam", "aod_hanoi")
 

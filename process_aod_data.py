@@ -4,10 +4,11 @@ import rasterio
 import numpy as np
 import xarray as xr
 import geopandas as gpd
+import subprocess
 from rasterio.mask import mask
 
 def nc_to_geotiff(nc_file, output_path):
-    ds = xr.open_dataset(nc_file)
+    ds = xr.open_dataset(nc_file, decode_timedelta=True)
     aod = ds['AOT'].values  # Dữ liệu AOD có shape (latitude, longitude)
     lon = ds['longitude'].values
     lat = ds['latitude'].values
@@ -72,3 +73,5 @@ if __name__ == "__main__":
     os.remove(aod_full_path)
 
     print(f"✅ Hoàn tất xử lý {filename}")
+    EXTRACT_SCRIPT = "C:/Users/Admin/himawari_project_v2/extract_station_aod.py"
+    subprocess.run(["python", EXTRACT_SCRIPT, aod_vietnam_path])
