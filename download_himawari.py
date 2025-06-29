@@ -10,12 +10,12 @@ FTP_PASS = "SP+wari8"
 BASE_DIR = "/pub/himawari/L2/ARP/031"
 
 # Cấu hình thư mục local
-LOCAL_BASE = "C:/Users/Admin/himawari_project_v2/himawari_data_v2"
-PROCESS_SCRIPT = "C:/Users/Admin/himawari_project_v2/process_aod_data.py"
-LOG_FILE = "C:/Users/Admin/himawari_project_v2/downloaded_files.log"
+LOCAL_BASE = "C:/Users/Admin/Desktop/himawari_project_v2/himawari_data_v2"
+PROCESS_SCRIPT = "C:/Users/Admin/Desktop/himawari_project_v2/process_aod_data.py"
+LOG_FILE = "C:/Users/Admin/Desktop/himawari_project_v2/downloaded_files.log"
 
 # Thời gian bắt đầu
-start_time = datetime(2025, 4, 4, 0, 0)
+start_time = datetime(2025, 4, 29, 0, 0)
 
 # Đọc log file
 if os.path.exists(LOG_FILE):
@@ -39,6 +39,16 @@ def download_and_process(ftp, remote_path, local_path):
 
         for file in files:
             if file in downloaded:
+                continue
+
+            # Kiểm tra giờ từ tên file
+            # Ví dụ: NC_H09_20250427_0000_L2ARP031_FLDK.02401_02401.nc
+            try:
+                hour = int(file.split('_')[3][:2])  # Lấy 2 số đầu của phần giờ (0000)
+                if hour > 12:  # Bỏ qua các file sau 12h
+                    continue
+            except (IndexError, ValueError):
+                # Nếu không lấy được giờ, bỏ qua file này
                 continue
 
             local_file = os.path.join(local_path, file)
