@@ -15,7 +15,7 @@ PROCESS_SCRIPT = "C:/Users/Admin/Desktop/himawari_project_v2/process_aod_data.py
 LOG_FILE = "C:/Users/Admin/Desktop/himawari_project_v2/downloaded_files.log"
 
 # Thời gian bắt đầu
-start_time = datetime(2025, 4, 29, 0, 0)
+start_time = datetime(2025, 6, 16, 0, 0)
 
 # Đọc log file
 if os.path.exists(LOG_FILE):
@@ -72,7 +72,7 @@ def main():
         try:
             ftp = FTP(FTP_HOST)
             ftp.login(FTP_USER, FTP_PASS)
-            print(f"🔄 Đang kiểm tra dữ liệu tại {start_time.strftime('%Y-%m-%d %H:%M')}...")
+            
 
             ymd = start_time.strftime("%Y%m")
             dd = start_time.strftime("%d")
@@ -85,11 +85,11 @@ def main():
 
             # Nếu có file → sang giờ tiếp theo, nếu không → đợi 10 phút
             if success:
-                print(f"👉 Xử lý xong {remote_path}\n")
+                
                 start_time += timedelta(hours=1)
             else:
                 print(f"⏳ Không có dữ liệu, thử lại sau 10 phút...\n")
-                time.sleep(600)  # 10 phút
+                time.sleep(30)  # 10 phút
 
         except Exception as e:
             print(f"⚠️ Lỗi khi kết nối FTP: {e}")

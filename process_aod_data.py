@@ -61,7 +61,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     nc_path = sys.argv[1]
-    print(f"Đang xử lý: {nc_path}")
+    
 
     base_dir = os.path.dirname(nc_path)
     filename = os.path.basename(nc_path).replace(".nc", "")
@@ -76,6 +76,6 @@ if __name__ == "__main__":
     os.remove(nc_path)
     os.remove(aod_full_path)
 
-    print(f"✅ Hoàn tất xử lý {filename}")
+    
     EXTRACT_SCRIPT = "C:/Users/Admin/Desktop/himawari_project_v2/extract_station_aod.py"
     subprocess.run(["python", EXTRACT_SCRIPT, aod_vietnam_path])
