@@ -1,12 +1,32 @@
 import pandas as pd
+import os
 
-# Đọc file CSV
-df = pd.read_csv("all_station_aod.csv")
+# Danh sách các file cần xử lý
+files = [
+    "all_station_aod05.csv",
+    "all_station_aod07.csv", 
+    "all_station_aod08.csv",
+    "all_station_aod1.csv",
+    "all_station_aod12.csv",
+    "all_station_aod15.csv"
+]
 
-# Xoá các cột toàn bộ là NaN
-df_cleaned = df.dropna(axis=1, how='all')
+# Xử lý từng file
+for file_name in files:
+    if os.path.exists(file_name):
+        print(f"Đang xử lý file: {file_name}")
+        
+        # Đọc file CSV
+        df = pd.read_csv(file_name)
+        
+        # Xoá các cột toàn bộ là NaN
+        df_cleaned = df.dropna(axis=1, how='all')
+        
+        # Ghi lại vào chính file đó
+        df_cleaned.to_csv(file_name, index=False)
+        
+        print(f"✅ Đã xử lý xong: {file_name}")
+    else:
+        print(f"❌ Không tìm thấy file: {file_name}")
 
-# Ghi ra file mới
-df_cleaned.to_csv("all_station_aod_cleaned.csv", index=False)
-
-print("Đã xoá các cột rỗng và lưu file mới: all_station_aod_cleaned.csv")
+print("\n🎉 Hoàn thành xử lý tất cả các file!")
