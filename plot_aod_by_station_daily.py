@@ -1,0 +1,93 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+import seaborn as sns
+import re
+import unicodedata
+
+# Hàm chuyển tên trạm thành tên file an toàn
+def safe_filename(s):
+    s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode('utf-8')
+    s = re.sub(r'[^a-zA-Z0-9]+', '_', s)
+    return s.strip('_').lower()
+
+aod_files = [
+    "all_station_aod05.csv",
+    "all_station_aod07.csv", 
+    "all_station_aod08.csv",
+    "all_station_aod1.csv",
+    "all_station_aod12.csv",
+    "all_station_aod15.csv"
+]
+
+base_dir = 'aod_station_v2'
+os.makedirs(base_dir, exist_ok=True)
+
+for aod_file in aod_files:
+    if not os.path.exists(aod_file):
+        print(f"❌ Không tìm thấy file: {aod_file}")
+        continue
+    print(f"Đang xử lý file: {aod_file}")
+    
+    df = pd.read_csv(aod_file)
+    aod_level = aod_file.replace('all_station_aod', '').replace('.csv', '')
+    aot_columns = [col for col in df.columns if col.startswith('AOT_')]
+    valid_aot_columns = []
+    for col in aot_columns:
+        try:
+            datetime.strptime(col.replace('AOT_', ''), '%Y%m%d_%H%M')
+            valid_aot_columns.append(col)
+        except Exception:
+            print(f"⚠️  Bỏ qua cột không đúng format: {col}")
+    if not valid_aot_columns:
+        print(f"❌ Không có cột AOT hợp lệ trong file {aod_file}")
+        continue
+
+    df_melted = pd.melt(df, 
+                        id_vars=['station_id', 'station_name', 'Latitude', 'Longitude'],
+                        value_vars=valid_aot_columns,
+                        var_name='timestamp',
+                        value_name='aod')
+    df_melted['timestamp'] = df_melted['timestamp'].str.replace('AOT_', '')
+    df_melted['datetime'] = pd.to_datetime(df_melted['timestamp'], format='%Y%m%d_%H%M')
+    df_melted['month'] = df_melted['datetime'].dt.strftime('%Y%m')
+    df_melted['aod'] = pd.to_numeric(df_melted['aod'], errors='coerce')
+    df_melted = df_melted[df_melted['aod'].notnull()]
+    df_melted = df_melted[df_melted['aod'] > 0]
+
+    for month, month_data in df_melted.groupby('month'):
+        month_dir = os.path.join(base_dir, f'aod_station_{month}')
+        level_dir = os.path.join(month_dir, f'aod_station_{month}_{aod_level}')
+        os.makedirs(level_dir, exist_ok=True)
+        for station_id, station_data in month_data.groupby('station_id'):
+            station_name = station_data['station_name'].iloc[0]
+            print(f"Trạm {station_id} ({station_name}) tháng {month} có {len(station_data)} dòng dữ liệu hợp lệ")
+            if len(station_data) == 0:
+                continue
+
+            # Tạo nhãn ngày
+            station_data = station_data.copy()
+            station_data['date_label'] = station_data['datetime'].dt.strftime('%m-%d')
+
+            # Tính trung bình AOD theo ngày
+            daily_aod = station_data.groupby('date_label')['aod'].mean().reset_index()
+
+            plt.figure(figsize=(16, 6))
+            sns.set_style("whitegrid")
+            plt.plot(daily_aod['date_label'], daily_aod['aod'],
+                     marker='o', linestyle='-', linewidth=1, markersize=4)
+
+            plt.title(f'AOD trung bình ngày (uncertainty {aod_level}) tại trạm {station_name} - Tháng {month[:4]}/{month[4:]}')
+            plt.xlabel('Ngày')
+            plt.ylabel('AOD trung bình ngày')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            plt.grid(True, axis='both', linestyle='--', alpha=0.5)
+
+            output_file = os.path.join(level_dir, f'station_{station_id}_{safe_filename(station_name)}.png')
+            plt.savefig(output_file, dpi=300, bbox_inches='tight')
+            plt.close()
+        print(f"  ✅ Đã xử lý tháng {month} với mức uncertainty {aod_level}")
+
+print("✅ Đã hoàn thành vẽ biểu đồ AOD trung bình ngày cho tất cả các trạm và mức uncertainty!") 
