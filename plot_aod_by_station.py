@@ -83,13 +83,27 @@ for aod_file in aod_files:
             # Tạo nhãn giờ
             station_data = station_data.copy()
             station_data['hour_label'] = station_data['datetime'].dt.strftime('%m-%d %H')
+            station_data['date'] = station_data['datetime'].dt.date
 
             # Tính trung bình AOD theo từng giờ
-            hourly_aod = station_data.groupby('hour_label')['aod'].mean().reset_index()
+            hourly_aod = station_data.groupby(['date', 'hour_label'])['aod'].mean().reset_index()
+
+            # Chèn NaN giữa các ngày
+            hourly_aod_with_gaps = []
+            prev_date = None
+            for _, row in hourly_aod.iterrows():
+                if prev_date is not None and row['date'] != prev_date:
+                    # Chèn 2 dòng NaN để tạo 2 ô trống
+                    hourly_aod_with_gaps.append({'hour_label': '', 'aod': float('nan')})
+                    hourly_aod_with_gaps.append({'hour_label': '', 'aod': float('nan')})
+                hourly_aod_with_gaps.append({'hour_label': row['hour_label'], 'aod': row['aod']})
+                prev_date = row['date']
+
+            hourly_aod_with_gaps = pd.DataFrame(hourly_aod_with_gaps)
 
             plt.figure(figsize=(24, 8))
             sns.set_style("whitegrid")
-            plt.plot(hourly_aod['hour_label'], hourly_aod['aod'],
+            plt.plot(hourly_aod_with_gaps['hour_label'], hourly_aod_with_gaps['aod'],
                      marker='o', linestyle='-', linewidth=1, markersize=4)
 
             plt.title(f'AOD (uncertainty {aod_level}) tại trạm {station_name} - Tháng {month[:4]}/{month[4:]}')
